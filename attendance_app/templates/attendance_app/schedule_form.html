@@ -1,0 +1,13 @@
+{% extends 'attendance_app/base.html' %}
+{% block content %}
+<div class="card shadow p-4 mx-auto" style="max-width: 500px;">
+    <h3 class="text-info text-center fw-bold mb-4">Add Schedule</h3>
+    <form method="POST">
+        {% csrf_token %} {{ form.as_p }}
+        <button type="submit" class="btn btn-info text-white w-100 mb-2 fw-bold">Save Schedule</button>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary w-100">Cancel</a>
+    </form>
+    ```html
+</div>
+{% endblock %}
+``
