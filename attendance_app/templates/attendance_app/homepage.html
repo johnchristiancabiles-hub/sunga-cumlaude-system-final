@@ -1,0 +1,222 @@
+
+
+{% extends 'attendance_app/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h1 class="display-5 fw-bold text-primary">Sunga Cumlaude</h1>
+        <p class="text-muted">{% if user.is_superuser %}Admin Control Panel{% else %}Unified Teacher Dashboard{% endif %}</p>
+    </div>
+```html
+    {% if user.is_superuser %}
+        <div class="row g-3 justify-content-center mb-4">
+            <div class="col-md-3"><a href="{% url 'add_record' %}" class="btn btn-warning w-100 py-3 shadow-sm fw-bold">➕ Add Student</a></div>
+            <div class="col-md-3"><a href="{% url 'add_schedule' %}" class="btn btn-info text-white w-100 py-3 shadow-sm fw-bold">📅 Add Schedule</a></div>
+        </div>
+``
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white"><h5 class="mb-0">Global Students Masterlist</h5></div>
+            <div class="card-body">
+                <table class="table align-middle">
+                    <thead><tr><th>ID Number</th><th>Name</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ student.student_id }}</td>
+                            <td>{{ student.student_name }}</td>
+                            <td>
+                                <a href="{% url 'edit_student' student.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'delete_student' student.pk %}" class="btn btn-sm btn-outline-danger">Del</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center">No students registered yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="row g-3 justify-content-center mb-4">
+            <div class="col-md-6"><a href="{% url 'add_class_roster' %}" class="btn btn-dark w-100 py-2 shadow-sm fw-bold">🎒 Create / Setup a New Class</a></div>
+        </div>
+
+        <div class="card shadow border-0">
+            <div class="card-header bg-white p-0 border-bottom-0">
+                <ul class="nav nav-tabs nav-fill" id="dashboardTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold text-dark" id="classes-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button" role="tab">📊 Class Record (Excel View)</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold text-primary" id="records-tab" data-bs-toggle="tab" data-bs-target="#records" type="button" role="tab">🗂️ Student Records</button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body bg-light">
+                <div class="tab-content" id="dashboardTabsContent">
+
+                    <div class="tab-pane fade show active" id="classes" role="tabpanel">
+                        {% if rosters %}
+                        <div class="accordion shadow-sm" id="classAccordion">
+                            {% for roster in rosters %}
+                            <div class="accordion-item border-warning mb-2">
+                                <h2 class="accordion-header" id="heading{{ roster.id }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} bg-warning bg-opacity-25 fw-bold text-dark fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ roster.id }}">
+                                        🎒 {{ roster.schedule.subject_name }} ({{ roster.schedule.time_slot }})
+                                    </button>
+                                </h2>
+
+                                <div id="collapse{{ roster.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#classAccordion">
+                                    <div class="accordion-body p-0">
+                                        <div class="bg-light p-2 text-end border-bottom">
+                                            <a href="{% url 'edit_class_roster' roster.pk %}" class="btn btn-sm btn-outline-dark">✏️ Edit Enrollees for this Class</a>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover mb-0 align-middle">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="25%">Student Name</th>
+                                                        <th width="20%">Quick Attendance</th>
+                                                        <th width="45%">Quick Grading</th>
+                                                        <th width="10%">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for student in roster.students.all %}
+                                                    <tr>
+                                                        <form id="row-form-{{ roster.schedule.id }}-{{ student.id }}" method="POST" action="{% url 'quick_save' roster.schedule.id student.id %}">
+                                                            {% csrf_token %}
+                                                        </form>
+                                                        <td>
+                                                            <strong>{{ student.student_name }}</strong><br>
+                                                            <small class="text-muted">{{ student.student_id }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <select name="status" class="form-select form-select-sm" form="row-form-{{ roster.schedule.id }}-{{ student.id }}">
+                                                                <option value="">-- Status --</option>
+                                                                <option value="Present">Present</option>
+                                                                <option value="Absent">Absent</option>
+                                                                <option value="Late">Late</option>
+                                                                <option value="Excuse">Excuse</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group input-group-sm">
+                                                                <select name="assessment_type" class="form-select" form="row-form-{{ roster.schedule.id }}-{{ student.id }}" style="max-width: 100px;">
+                                                                    <option value="">Type...</option>
+                                                                    <option value="Quiz">Quiz</option>
+                                                                    <option value="Exam">Exam</option>
+                                                                    <option value="Project">Project</option>
+                                                                    <option value="Activity">Activity</option>
+                                                                </select>
+                                                                <input type="number" step="0.01" name="score" class="form-control" placeholder="Score" form="row-form-{{ roster.schedule.id }}-{{ student.id }}">
+                                                                <span class="input-group-text">/</span>
+                                                                <input type="number" step="0.01" name="total_items" class="form-control" placeholder="Total" form="row-form-{{ roster.schedule.id }}-{{ student.id }}">
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold" form="row-form-{{ roster.schedule.id }}-{{ student.id }}">💾 Save</button>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-5">
+                            <h4>No classes setup yet.</h4>
+                            <p>Click "Create / Setup a New Class" above to get started.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="tab-pane fade" id="records" role="tabpanel">
+                        {% if rosters %}
+                        <div class="accordion shadow-sm" id="recordAccordion">
+                            {% for roster in rosters %}
+                            <div class="accordion-item border-primary mb-3">
+                                <h2 class="accordion-header" id="recHeading{{ roster.id }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} bg-primary bg-opacity-10 fw-bold text-dark fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#recCollapse{{ roster.id }}">
+                                        🗂️ {{ roster.schedule.subject_name }} ({{ roster.schedule.time_slot }})
+                                    </button>
+                                </h2>
+
+                                <div id="recCollapse{{ roster.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#recordAccordion">
+                                    <div class="accordion-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered mb-0 align-middle">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="20%">Student Profile</th>
+                                                        <th width="40%">📅 Attendance History</th>
+                                                        <th width="40%">💯 Grades & Assessments</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for student in roster.students.all %}
+                                                    <tr>
+                                                        <td class="bg-light">
+                                                            <span class="fw-bold fs-6">{{ student.student_name }}</span><br>
+                                                            <small class="text-muted">ID: {{ student.student_id }}</small>
+                                                        </td>
+
+                                                        <td>
+                                                            {% for log in logs %}
+                                                                {% if log.record == student and log.schedule == roster.schedule %}
+                                                                    <div class="d-inline-flex align-items-center border rounded p-1 mb-1 me-1 bg-white shadow-sm">
+                                                                        <span class="badge {% if log.status == 'Present' %}bg-success{% elif log.status == 'Absent' %}bg-danger{% elif log.status == 'Late' %}bg-warning text-dark{% else %}bg-secondary{% endif %} me-2">
+                                                                            {{ log.date_recorded|date:"M d" }} - {{ log.status }}
+                                                                        </span>
+                                                                        <a href="{% url 'edit_attendance' log.pk %}" class="text-primary text-decoration-none me-1" title="Edit">✏️</a>
+                                                                        <a href="{% url 'delete_attendance' log.pk %}" class="text-danger text-decoration-none" title="Delete">✖️</a>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% if not logs %} <small class="text-muted">No records yet.</small> {% endif %}
+                                                        </td>
+
+                                                        <td>
+                                                            {% for grade in grades %}
+                                                                {% if grade.record == student and grade.schedule == roster.schedule %}
+                                                                    <div class="d-inline-flex align-items-center border rounded p-1 mb-1 me-1 bg-white shadow-sm">
+                                                                        <span class="badge {% if grade.remarks == 'Passed' %}bg-primary{% else %}bg-danger{% endif %} me-2">
+                                                                            {{ grade.assessment_type }}: {{ grade.score }}/{{ grade.total_items }} ({{ grade.percentage }}%)
+                                                                        </span>
+                                                                        <a href="{% url 'edit_grade' grade.pk %}" class="text-primary text-decoration-none me-1" title="Edit">✏️</a>
+                                                                        <a href="{% url 'delete_grade' grade.pk %}" class="text-danger text-decoration-none" title="Delete">✖️</a>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% if not grades %} <small class="text-muted">No grades yet.</small> {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-5">
+                            <h4>No records to show.</h4>
+                            <p>Setup a class first and save some grades or attendance.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
