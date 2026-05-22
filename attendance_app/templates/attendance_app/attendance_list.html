@@ -1,0 +1,25 @@
+{% extends 'attendance_app/base.html' %}
+{% block content %}
+<div class="card shadow border-0">
+    <div class="card-header bg-primary text-white"><h4>My Attendance Logs</h4></div>
+    <div class="card-body text-center">
+        <table class="table">
+            <thead><tr><th>Student</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.record.student_name }}</td>
+                    <td><span class="badge bg-info">{{ log.status }}</span></td>
+                    <td>{{ log.date_recorded|date:"M d, Y - h:i A" }}</td>
+                    <td>
+                        <a href="{% url 'edit_attendance' log.pk %}" class="btn btn-sm btn-link">Edit</a>
+                        <a href="{% url 'delete_attendance' log.pk %}" class="btn btn-sm btn-link text-danger">Del</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+``
