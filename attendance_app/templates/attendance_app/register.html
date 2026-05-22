@@ -1,0 +1,16 @@
+{% extends 'attendance_app/base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow p-4 border-warning">
+            <h2 class="text-center text-warning mb-4">📝 Teacher Registration</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-warning w-100 fw-bold py-2">Register Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+``

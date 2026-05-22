@@ -1,0 +1,12 @@
+{% extends 'attendance_app/base.html' %}
+{% block content %}
+<div class="card shadow p-4 mx-auto" style="max-width: 500px;">
+    <h3 class="text-warning text-center fw-bold mb-4">{% if edit_mode %}Edit Student{% else %}Add Student{% endif %}</h3>
+    <form method="POST">
+        {% csrf_token %} {{ form.as_p }}
+        <button type="submit" class="btn btn-warning w-100 mb-2 fw-bold">Save Student</button>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary w-100">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+``

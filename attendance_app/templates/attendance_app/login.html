@@ -1,0 +1,31 @@
+{% extends 'attendance_app/base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow p-4">
+            <h2 class="text-center text-primary mb-4">🔐 Login to Portal</h2>
+            <form method="POST" id="loginForm">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Login</button>
+            </form>
+            <div class="text-center mt-3">
+                <small>Don't have an account? <a href="{% url 'register' %}">Register here</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let formInputs = document.querySelectorAll('#loginForm input:not([type="hidden"])');
+        formInputs.forEach(function(input) {
+            input.setAttribute('readonly', 'readonly');
+            input.value = '';
+            input.addEventListener('focus', function() {
+                this.removeAttribute('readonly');
+            });
+        });
+    });
+</script>
+{% endblock %}
+``
